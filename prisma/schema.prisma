@@ -1,0 +1,133 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+datasource db {
+  provider = "mongodb"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+// model Post {
+//   id     String @id @default(auto()) @map("_id") @db.ObjectId
+//   title  String
+//   userId String @db.ObjectId
+//   user   User   @relation(fields: [userId], references: [id])
+// }
+
+// model User {
+//   id    String @id @default(auto()) @map("_id") @db.ObjectId
+//   email String
+//   posts Post[]
+// }
+
+model Store {
+  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  name       String
+  userId     String      @unique
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  billboards Billboard[] @relation("StoreToBillboard")
+  categories Category[]  @relation("StoreToCategory")
+  sizes      Size[]      @relation("StoreToSize")
+  colors     Color[]     @relation("StoreToColor")
+  products   Product[]   @relation("StoreToProduct")
+  orders     Order[]     @relation("StoreToOrder")
+}
+
+model Billboard {
+  id         String     @id @default(auto()) @map("_id") @db.ObjectId
+  storeId    String     @db.ObjectId
+  label      String
+  imageUrl   String
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+  store      Store      @relation("StoreToBillboard", fields: [storeId], references: [id])
+  categories Category[] @relation("BillboardToCategory")
+}
+
+model Category {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  storeId     String    @db.ObjectId
+  store       Store     @relation("StoreToCategory", fields: [storeId], references: [id])
+  billboardId String    @db.ObjectId
+  billboard   Billboard @relation("BillboardToCategory", fields: [billboardId], references: [id])
+  name        String
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  products    Product[] @relation("CategoryToProduct")
+}
+
+model Size {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  storeId   String    @db.ObjectId
+  store     Store     @relation("StoreToSize", fields: [storeId], references: [id])
+  name      String
+  value     String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[] @relation("SizeToProduct")
+}
+
+model Color {
+  id        String    @id @default(auto()) @map("_id") @db.ObjectId
+  storeId   String    @db.ObjectId
+  store     Store     @relation("StoreToColor", fields: [storeId], references: [id])
+  name      String
+  value     String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  products  Product[] @relation("ColorToProduct")
+}
+
+model Product {
+  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  storeId    String      @db.ObjectId
+  store      Store       @relation("StoreToProduct", fields: [storeId], references: [id])
+  categoryId String      @db.ObjectId
+  category   Category    @relation("CategoryToProduct", fields: [categoryId], references: [id])
+  name       String
+  price      Float
+  isFeatured Boolean     @default(false)
+  isArchived Boolean     @default(false)
+  sizeId     String      @db.ObjectId
+  size       Size        @relation("SizeToProduct", fields: [sizeId], references: [id])
+  colorId    String      @db.ObjectId
+  color      Color       @relation("ColorToProduct", fields: [colorId], references: [id])
+  images     Image[]     @relation("ProductToImage")
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  orderItems OrderItem[] @relation("ProductToOrderItem")
+}
+
+model Image {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  productId String   @db.ObjectId
+  product   Product  @relation("ProductToImage", fields: [productId], references: [id], onDelete: Cascade)
+  url       String // URL of the image
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id         String      @id @default(auto()) @map("_id") @db.ObjectId
+  storeId    String      @db.ObjectId
+  store      Store       @relation("StoreToOrder", fields: [storeId], references: [id])
+  orderItems OrderItem[] @relation("OrderToOrderItem")
+  isPaid     Boolean     @default(false)
+  phone      String      @default("")
+  address    String      @default("")
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+}
+
+// Intermediary for a many-to-many relationship
+model OrderItem {
+  id        String  @id @default(auto()) @map("_id") @db.ObjectId
+  orderId   String  @db.ObjectId
+  order     Order   @relation("OrderToOrderItem", fields: [orderId], references: [id])
+  productId String  @db.ObjectId
+  product   Product @relation("ProductToOrderItem", fields: [productId], references: [id])
+}

@@ -1,12 +1,11 @@
 "use client";
 
-import { Loader } from "@/components/loader";
 
-
+import Loader from "@/components/Loader";
 
 const Loading = () => {
   return ( 
-    <div className="flex h-full w-full items-center justify-center">
+    <div className="flex items-center justify-center w-full h-full">
       <Loader />
     </div>
    );
